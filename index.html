@@ -110,6 +110,48 @@
             document.getElementById('downloadBtn').style.display = 'inline-block';
         }
 
+        function downloadPythonData() {
+            if (!processedData) {
+                alert('No data to download. Please process a file first.');
+                return;
+            }
+            
+            // Create Python dictionary format
+            const pythonCode = generatePythonCode(processedData);
+            const jsonData = JSON.stringify(processedData, null, 2);
+            
+            // Create downloadable files
+            downloadFile('data.py', pythonCode, 'text/plain');
+            downloadFile('data.json', jsonData, 'application/json');
+        }
+        
+        function generatePythonCode(data) {
+            let pythonCode = '# Generated from XLSX file\n';
+            pythonCode += 'import json\n\n';
+            pythonCode += '# Data extracted from Excel sheets\n';
+            pythonCode += 'excel_data = ' + JSON.stringify(data, null, 4).replace(/"/g, "'") + '\n\n';
+            pythonCode += '# Access data like this:\n';
+            pythonCode += '# for sheet_name, sheet_data in excel_data.items():\n';
+            pythonCode += '#     print(f"Sheet: {sheet_name}")\n';
+            pythonCode += '#     for row in sheet_data:\n';
+            pythonCode += '#         print(row)\n';
+            
+            return pythonCode;
+        }
+        
+        function downloadFile(filename, content, contentType) {
+            const blob = new Blob([content], { type: contentType });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+
     </script>
 </body>
 </html>
