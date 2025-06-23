@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello Me Website</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            text-align: center;
+        }
+        .form-container {
+            background-color: #f9f9f9;
+            padding: 30px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        input[type="text"] {
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            margin: 10px;
+            width: 200px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #greeting {
+            font-size: 24px;
+            font-weight: bold;
+            color: #28a745;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Hello Me Website</h1>
+    
+    <div class="form-container">
+        <label for="nameInput">Enter your name:</label><br>
+        <input type="text" id="nameInput" placeholder="Type your name here">
+        <br>
+        <button onclick="displayGreeting()">Done</button>
+    </div>
+    
+    <div id="greeting"></div>
+
+    <script>
+        function displayGreeting() {
+            const nameInput = document.getElementById('nameInput');
+            const greeting = document.getElementById('greeting');
+            const name = nameInput.value.trim();
+            
+            if (name) {
+                greeting.textContent = `Hello, ${name}!`;
+            } else {
+                greeting.textContent = 'Please enter your name first.';
+            }
+        }
+        
+        // Allow Enter key to trigger the button
+        document.getElementById('nameInput').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                displayGreeting();
+            }
+        });
+    </script>
+</body>
+</html>
