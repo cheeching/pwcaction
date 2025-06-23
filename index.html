@@ -3,32 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hello Me Website</title>
+    <title>XLSX Processor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 600px;
+            max-width: 800px;
             margin: 50px auto;
             padding: 20px;
-            text-align: center;
         }
-        .form-container {
-            background-color: #f9f9f9;
-            padding: 30px;
+        .upload-container {
+            border: 2px dashed #ccc;
             border-radius: 10px;
+            padding: 40px;
+            text-align: center;
             margin: 20px 0;
         }
-        input[type="text"] {
-            padding: 10px;
-            font-size: 16px;
-            border: 2px solid #ddd;
-            border-radius: 5px;
-            margin: 10px;
-            width: 200px;
-        }
-        button {
+        .btn {
             padding: 10px 20px;
-            font-size: 16px;
             background-color: #007bff;
             color: white;
             border: none;
@@ -36,48 +28,32 @@
             cursor: pointer;
             margin: 10px;
         }
-        button:hover {
+        .btn:hover {
             background-color: #0056b3;
         }
-        #greeting {
-            font-size: 24px;
-            font-weight: bold;
-            color: #28a745;
+        #output {
             margin-top: 20px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
         }
     </style>
 </head>
 <body>
-    <h1>Hello Me Website</h1>
+    <h1>XLSX to Python Data Processor</h1>
     
-    <div class="form-container">
-        <label for="nameInput">Enter your name:</label><br>
-        <input type="text" id="nameInput" placeholder="Type your name here">
-        <br>
-        <button onclick="displayGreeting()">Done</button>
+    <div class="upload-container">
+        <input type="file" id="fileInput" accept=".xlsx,.xls" />
+        <button class="btn" onclick="processFile()">Process File</button>
     </div>
     
-    <div id="greeting"></div>
+    <div id="output"></div>
+    <button class="btn" id="downloadBtn" onclick="downloadPythonData()" style="display: none;">
+        Download Python Data
+    </button>
 
     <script>
-        function displayGreeting() {
-            const nameInput = document.getElementById('nameInput');
-            const greeting = document.getElementById('greeting');
-            const name = nameInput.value.trim();
-            
-            if (name) {
-                greeting.textContent = `Hello, ${name}!`;
-            } else {
-                greeting.textContent = 'Please enter your name first.';
-            }
-        }
-        
-        // Allow Enter key to trigger the button
-        document.getElementById('nameInput').addEventListener('keypress', function(event) {
-            if (event.key === 'Enter') {
-                displayGreeting();
-            }
-        });
+        // JavaScript processing code will go here
     </script>
 </body>
 </html>
