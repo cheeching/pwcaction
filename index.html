@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>XLSX Processor</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <title>Excel to Word Converter</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -12,146 +11,137 @@
             margin: 50px auto;
             padding: 20px;
         }
-        .upload-container {
+        .upload-area {
             border: 2px dashed #ccc;
             border-radius: 10px;
             padding: 40px;
             text-align: center;
             margin: 20px 0;
         }
-        .btn {
-            padding: 10px 20px;
+        .upload-area:hover {
+            border-color: #007bff;
+        }
+        button {
             background-color: #007bff;
             color: white;
+            padding: 10px 20px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             margin: 10px;
         }
-        .btn:hover {
+        button:hover {
             background-color: #0056b3;
         }
-        #output {
-            margin-top: 20px;
-            padding: 20px;
-            background-color: #f8f9fa;
+        #status {
+            margin: 20px 0;
+            padding: 10px;
             border-radius: 5px;
         }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
     </style>
 </head>
 <body>
-    <h1>XLSX to Python Data Processor</h1>
+    <h1>Excel to Word Converter</h1>
     
-    <div class="upload-container">
-        <input type="file" id="fileInput" accept=".xlsx,.xls" />
-        <button class="btn" onclick="processFile()">Process File</button>
+    <div class="upload-area">
+        <p>Click to select or drag and drop your Excel file (.xlsx)</p>
+        <input type="file" id="fileInput" accept=".xlsx,.xls" style="display: none;">
+        <button onclick="document.getElementById('fileInput').click()">Select Excel File</button>
     </div>
     
-    <div id="output"></div>
-    <button class="btn" id="downloadBtn" onclick="downloadPythonData()" style="display: none;">
-        Download Python Data
-    </button>
-
+    <div id="status"></div>
+    <button id="convertBtn" onclick="convertToWord()" style="display: none;">Convert to Word</button>
+    
+    <!-- Include required libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://unpkg.com/docx@7.8.2/build/index.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    
     <script>
-        let processedData = null;
+        let excelData = null;
         
-        function processFile() {
-            const fileInput = document.getElementById('fileInput');
-            const file = fileInput.files[0];
-            
-            if (!file) {
-                alert('Please select a file first.');
-                return;
-            }
+        document.getElementById('fileInput').addEventListener('change', handleFile);
+        
+        function handleFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
             
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
-                    // Read the file as array buffer
                     const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
+                    const workbook = XLSX.read(data, {type: 'array'});
                     
-                    // Process all sheets
-                    const result = {};
-                    workbook.SheetNames.forEach(sheetName => {
-                        const worksheet = workbook.Sheets[sheetName];
-                        const jsonData = XLSX.utils.sheet_to_json(worksheet);
-                        result[sheetName] = jsonData;
-                    });
+                    // Get first worksheet
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    excelData = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
                     
-                    processedData = result;
-                    displayResults(result);
-                    
+                    showStatus('Excel file loaded successfully!', 'success');
+                    document.getElementById('convertBtn').style.display = 'block';
                 } catch (error) {
-                    alert('Error processing file: ' + error.message);
+                    showStatus('Error reading Excel file: ' + error.message, 'error');
                 }
             };
-            
             reader.readAsArrayBuffer(file);
         }
         
-        function displayResults(data) {
-            const output = document.getElementById('output');
-            let html = '<h3>Processed Data Preview:</h3>';
-            
-            Object.keys(data).forEach(sheetName => {
-                html += `<h4>Sheet: ${sheetName}</h4>`;
-                html += `<p>Records found: ${data[sheetName].length}</p>`;
-                
-                if (data[sheetName].length > 0) {
-                    html += '<pre>' + JSON.stringify(data[sheetName].slice(0, 3), null, 2) + '</pre>';
-                    if (data[sheetName].length > 3) {
-                        html += `<p>... and ${data[sheetName].length - 3} more records</p>`;
-                    }
-                }
-            });
-            
-            output.innerHTML = html;
-            document.getElementById('downloadBtn').style.display = 'inline-block';
-        }
-
-        function downloadPythonData() {
-            if (!processedData) {
-                alert('No data to download. Please process a file first.');
+        function convertToWord() {
+            if (!excelData) {
+                showStatus('Please select an Excel file first.', 'error');
                 return;
             }
             
-            // Create Python dictionary format
-            const pythonCode = generatePythonCode(processedData);
-            const jsonData = JSON.stringify(processedData, null, 2);
-            
-            // Create downloadable files
-            downloadFile('data.py', pythonCode, 'text/plain');
-            downloadFile('data.json', jsonData, 'application/json');
+            try {
+                // Create new Word document
+                const doc = new docx.Document({
+                    sections: [{
+                        properties: {},
+                        children: createDocumentContent()
+                    }]
+                });
+                
+                // Generate and download the document
+                docx.Packer.toBlob(doc).then(blob => {
+                    saveAs(blob, "converted-document.docx");
+                    showStatus('Word document generated and downloaded!', 'success');
+                });
+                
+            } catch (error) {
+                showStatus('Error creating Word document: ' + error.message, 'error');
+            }
         }
         
-        function generatePythonCode(data) {
-            let pythonCode = '# Generated from XLSX file\n';
-            pythonCode += 'import json\n\n';
-            pythonCode += '# Data extracted from Excel sheets\n';
-            pythonCode += 'excel_data = ' + JSON.stringify(data, null, 4).replace(/"/g, "'") + '\n\n';
-            pythonCode += '# Access data like this:\n';
-            pythonCode += '# for sheet_name, sheet_data in excel_data.items():\n';
-            pythonCode += '#     print(f"Sheet: {sheet_name}")\n';
-            pythonCode += '#     for row in sheet_data:\n';
-            pythonCode += '#         print(row)\n';
+        function createDocumentContent() {
+            const children = [];
             
-            return pythonCode;
+            // Add title
+            children.push(new docx.Paragraph({
+                text: "Converted Excel Data",
+                heading: docx.HeadingLevel.HEADING_1
+            }));
+            
+            // Create table from Excel data
+            if (excelData.length > 0) {
+                const table = new docx.Table({
+                    rows: excelData.map(row => new docx.TableRow({
+                        children: row.map(cell => new docx.TableCell({
+                            children: [new docx.Paragraph(String(cell || ''))]
+                        }))
+                    }))
+                });
+                children.push(table);
+            }
+            
+            return children;
         }
         
-        function downloadFile(filename, content, contentType) {
-            const blob = new Blob([content], { type: contentType });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = filename;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = type;
         }
-
-
     </script>
 </body>
 </html>
