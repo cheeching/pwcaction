@@ -53,7 +53,63 @@
     </button>
 
     <script>
-        // JavaScript processing code will go here
+        let processedData = null;
+        
+        function processFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select a file first.');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    // Read the file as array buffer
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    
+                    // Process all sheets
+                    const result = {};
+                    workbook.SheetNames.forEach(sheetName => {
+                        const worksheet = workbook.Sheets[sheetName];
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                        result[sheetName] = jsonData;
+                    });
+                    
+                    processedData = result;
+                    displayResults(result);
+                    
+                } catch (error) {
+                    alert('Error processing file: ' + error.message);
+                }
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+        
+        function displayResults(data) {
+            const output = document.getElementById('output');
+            let html = '<h3>Processed Data Preview:</h3>';
+            
+            Object.keys(data).forEach(sheetName => {
+                html += `<h4>Sheet: ${sheetName}</h4>`;
+                html += `<p>Records found: ${data[sheetName].length}</p>`;
+                
+                if (data[sheetName].length > 0) {
+                    html += '<pre>' + JSON.stringify(data[sheetName].slice(0, 3), null, 2) + '</pre>';
+                    if (data[sheetName].length > 3) {
+                        html += `<p>... and ${data[sheetName].length - 3} more records</p>`;
+                    }
+                }
+            });
+            
+            output.innerHTML = html;
+            document.getElementById('downloadBtn').style.display = 'inline-block';
+        }
+
     </script>
 </body>
 </html>
